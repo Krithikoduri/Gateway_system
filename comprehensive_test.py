@@ -5,8 +5,9 @@ import requests
 import json
 import time
 import sys
+import os
 
-BASE_URL = "http://127.0.0.1:8080"
+BASE_URL = os.getenv("TEST_BASE_URL", "http://127.0.0.1:8080")
 API_URL = f"{BASE_URL}/api"
 
 tests_passed = 0

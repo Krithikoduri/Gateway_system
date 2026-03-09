@@ -221,20 +221,33 @@
             if (useToken && currentToken) {
                 headers['Authorization'] = `Bearer ${currentToken}`;
             }
-            
+
             const options = { method, headers };
             if (body) options.body = JSON.stringify(body);
-            
-            const response = await fetch(`${API_URL}${endpoint}`, options);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || data.detail || 'Request failed');
-            }
-            
-            return data;
-        }
 
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, options);
+
+                const contentType = response.headers.get("content-type");
+                let data;
+
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { detail: text || response.statusText };
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || data.detail || `Request failed with status ${response.status}`);
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
         // Simple email login (fallback)
         async function simpleLogin() {
             const email = document.getElementById('emailLogin').value.trim();

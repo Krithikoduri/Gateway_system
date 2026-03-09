@@ -41,10 +41,16 @@ def send_email(to_email, subject, body_html):
         html_part = MIMEText(body_html, 'html')
         msg.attach(html_part)
         
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.send_message(msg)
+        # Try port 465 with SSL first, fallback to 587 with STARTTLS
+        try:
+            with smtplib.SMTP_SSL(SMTP_SERVER, 465) as server:
+                server.login(SMTP_EMAIL, SMTP_PASSWORD)
+                server.send_message(msg)
+        except:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_EMAIL, SMTP_PASSWORD)
+                server.send_message(msg)
         
         print(f'✅ Email sent to {to_email}: {subject}')
         return True

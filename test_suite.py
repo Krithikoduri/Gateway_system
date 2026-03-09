@@ -67,13 +67,13 @@ try:
     
     cursor = conn.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = cursor.fetchall()
+    tables = [row[0] for row in cursor.fetchall()]
     conn.close()
     
-    required_tables = ['users', 'requests']  # Fixed: table is 'requests' not 'permission_requests'
+    required_tables = ['users', 'requests']
     for table in required_tables:
-        found = any(table in str(t) for t in tables)
-        test(f"Table exists: {table}", found, f"Table {table} missing")
+        found = table in tables
+        test(f"Table exists: {table}", found, f"Table {table} missing. Found: {tables}")
 except Exception as e:
     test("Database connection", False, str(e))
 
@@ -91,7 +91,7 @@ try:
     test("CORS configured", 'CORSMiddleware' in server_code)
     test("JWT configured", 'import jwt' in server_code)
     test("Google OAuth configured", 'GOOGLE_CLIENT_ID' in server_code)
-    test("Emergency auto-approve logic", "request_type == 'Emergency'" in server_code or "request_type == 'emergency'" in server_code)
+    test("Emergency auto-approve logic", "request['request_type'].lower() == 'emergency'" in server_code or "request_type == 'emergency'" in server_code)
     
 except Exception as e:
     test("Server configuration check", False, str(e))

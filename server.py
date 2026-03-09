@@ -27,7 +27,7 @@ load_dotenv()
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
-ALLOWED_EMAIL_DOMAIN = 'bvrithyderabad.edu.in'
+ALLOWED_EMAIL_DOMAIN = os.getenv('ALLOWED_EMAIL_DOMAIN', 'bvrithyderabad.edu.in')
 ENFORCE_DOMAIN_RESTRICTION = os.getenv('ENFORCE_DOMAIN_RESTRICTION', 'false').lower() == 'true'
 
 # Role mapping - HODs and Teachers by email
@@ -48,13 +48,20 @@ def is_valid_email(email):
 
 def get_user_role(email):
     """Determine user role based on email"""
-    email_lower = email.lower().strip()
-    if email_lower in HOD_EMAILS:
-        return 'hod'
-    elif email_lower in TEACHER_EMAILS:
-        return 'teacher'
-    else:
+    if not email:
         return 'student'
+        
+    email_lower = email.lower().strip()
+    
+    # Check HOD list
+    if any(h.lower().strip() == email_lower for h in HOD_EMAILS):
+        return 'hod'
+        
+    # Check Teacher list
+    if any(t.lower().strip() == email_lower for t in TEACHER_EMAILS):
+        return 'teacher'
+        
+    return 'student'
 
 app = FastAPI()
 
@@ -93,8 +100,13 @@ def verify_token(authorization: str = Header(None)):
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return payload
-    except:
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Token has expired')
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail='Invalid token')
+    except Exception as e:
+        print(f"❌ Token verification error: {str(e)}")
+        raise HTTPException(status_code=401, detail='Authentication failed')
 
 # Models
 class LoginRequest(BaseModel):
@@ -250,9 +262,10 @@ def google_auth(req: GoogleAuthRequest):
             user_roll = existing_user['roll_number']
         else:
             conn.close()
+            print(f"❌ Login denied: {email} is not in the database.")
             raise HTTPException(
                 status_code=403, 
-                detail='User not registered. Please contact admin.'
+                detail='User not registered. Please contact the administrator to add your email to the system.'
             )
         
         conn.close()
