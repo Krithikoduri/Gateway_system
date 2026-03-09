@@ -127,6 +127,7 @@ class RejectRequest(BaseModel):
 
 # ADMIN - Import students (temporary endpoint)
 @app.post('/api/admin/import-students')
+@app.get('/api/admin/import-students')
 def import_students():
     """Import initial students - remove after use"""
     students = [
