@@ -73,6 +73,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/version")
+def get_version():
+    return {"version": "1.0.3", "deployment_time": "2026-03-09 13:45"}
+
 # Serve static HTML files
 @app.get("/")
 def read_root():
