@@ -142,20 +142,24 @@ def import_students():
     c = conn.cursor()
     imported = 0
     
+    is_postgres = os.getenv('DATABASE_URL', '').startswith('postgres')
+    placeholder = '%s' if is_postgres else '?'
+    
     for student in students:
         try:
-            c.execute('''
+            c.execute(f'''
                 INSERT INTO users (role, email, name, department, class, roll_number, parent_phone, parent_email)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
             ''', student)
             imported += 1
-        except:
-            pass  # Skip if already exists
+        except Exception as e:
+            print(f"Error importing {student[1]}: {str(e)}")
+            pass
     
     conn.commit()
     conn.close()
     
-    return {'message': f'Imported {imported} users'}
+    return {'message': f'Imported {imported} users successfully'}
 
 @app.get('/api/admin/list-users')
 def list_users():
