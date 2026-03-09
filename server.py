@@ -77,18 +77,21 @@ app.add_middleware(
 def get_version():
     return {"version": "1.0.3", "deployment_time": "2026-03-09 13:45"}
 
+# Get the directory of the current file
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Serve static HTML files
 @app.get("/")
 def read_root():
-    return FileResponse("front_gate.html")
+    return FileResponse(os.path.join(BASE_DIR, "front_gate.html"))
 
 @app.get("/front_gate.html")
 def read_front_gate():
-    return FileResponse("front_gate.html")
+    return FileResponse(os.path.join(BASE_DIR, "front_gate.html"))
 
 @app.get("/parent-approve.html")
 def read_parent_approve():
-    return FileResponse("parent-approve.html")
+    return FileResponse(os.path.join(BASE_DIR, "parent-approve.html"))
 
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
